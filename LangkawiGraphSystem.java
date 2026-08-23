@@ -1,6 +1,8 @@
 import java.util.*;
 
-// Class representing a directed/undirected edge in the graph
+// =============================================================================
+// DATA STRUCTURE ARCHITECTURE & EDGE MODEL
+// =============================================================================
 class Edge {
     private String destination;
     private String routeType;
@@ -14,12 +16,13 @@ class Edge {
     public String getRouteType() { return routeType; }
 }
 
-// Core Adjacency List Graph Implementation
 class ScenicGraph {
-    // Map storing Spot Name -> List of Connected Edges
+
+    // -------------------------------------------------------------------------
+    // Adjacency List Storage & Default Network Setup
+    // -------------------------------------------------------------------------
     private Map<String, List<Edge>> adjacencyList = new LinkedHashMap<>();
 
-    // 1. Initialize Default Langkawi SkyCab Network (10 Spots, 11 Routes)
     public void createDefaultNetwork() {
         adjacencyList.clear();
         String[] spots = {
@@ -46,7 +49,6 @@ class ScenicGraph {
         System.out.println("\n[SUCCESS] Default network created (10 spots, 11 routes).");
     }
 
-    // Helper: Case-insensitive lookup for vertex names
     public String getCanonicalName(String name) {
         if (name == null) return null;
         for (String key : adjacencyList.keySet()) {
@@ -58,7 +60,9 @@ class ScenicGraph {
     public boolean isEmpty() { return adjacencyList.isEmpty(); }
     public Set<String> getSpotNames() { return adjacencyList.keySet(); }
 
-    // 2. Add Scenic Spot (Vertex)
+    // -------------------------------------------------------------------------
+    // Dynamic Graph Mutations (Vertices & Edges)
+    // -------------------------------------------------------------------------
     public boolean addScenicSpot(String spotName, boolean printMsg) {
         if (spotName == null || spotName.trim().isEmpty()) {
             if (printMsg) System.out.println("[ERROR] Spot name cannot be empty.");
@@ -73,7 +77,6 @@ class ScenicGraph {
         return true;
     }
 
-    // 3. Remove Scenic Spot (Vertex)
     public boolean removeScenicSpot(String spotName) {
         String canonical = getCanonicalName(spotName);
         if (canonical == null) {
@@ -81,7 +84,6 @@ class ScenicGraph {
             return false;
         }
         adjacencyList.remove(canonical);
-        // Remove all edges referencing this spot
         for (List<Edge> edges : adjacencyList.values()) {
             edges.removeIf(e -> e.getDestination().equalsIgnoreCase(canonical));
         }
@@ -89,7 +91,6 @@ class ScenicGraph {
         return true;
     }
 
-    // 4. Add Route (Edge) - Undirected
     public boolean addRoute(String locA, String locB, String type, boolean printMsg) {
         String canonicalA = getCanonicalName(locA);
         String canonicalB = getCanonicalName(locB);
@@ -102,7 +103,6 @@ class ScenicGraph {
             if (printMsg) System.out.println("[ERROR] Cannot connect a spot to itself.");
             return false;
         }
-        // Check for existing route
         for (Edge e : adjacencyList.get(canonicalA)) {
             if (e.getDestination().equalsIgnoreCase(canonicalB)) {
                 if (printMsg) System.out.println("[ERROR] Route already exists between these spots.");
@@ -116,7 +116,6 @@ class ScenicGraph {
         return true;
     }
 
-    // 5. Remove Route (Edge)
     public boolean removeRoute(String locA, String locB) {
         String canonicalA = getCanonicalName(locA);
         String canonicalB = getCanonicalName(locB);
@@ -137,7 +136,9 @@ class ScenicGraph {
         return false;
     }
 
-    // 6. Search Scenic Spot
+    // -------------------------------------------------------------------------
+    // Search, Display & BFS Traversal Engine
+    // -------------------------------------------------------------------------
     public void searchScenicSpot(String spotName) {
         String canonical = getCanonicalName(spotName);
         if (canonical == null) {
@@ -158,7 +159,6 @@ class ScenicGraph {
         System.out.println();
     }
 
-    // 7. Display Network (Adjacency List)
     public void displayNetwork() {
         if (adjacencyList.isEmpty()) {
             System.out.println("\n[INFO] Graph is currently empty.");
@@ -180,7 +180,6 @@ class ScenicGraph {
         }
     }
 
-    // 8. Breadth-First Search Traversal (BFS)
     public void breadthFirstSearch(String startSpot) {
         String canonical = getCanonicalName(startSpot);
         if (canonical == null) {
@@ -213,7 +212,7 @@ class ScenicGraph {
                 }
             }
         }
-        
+
         System.out.print("\nFinal BFS Path: ");
         for (int i = 0; i < order.size(); i++) {
             System.out.print(order.get(i));
@@ -225,7 +224,9 @@ class ScenicGraph {
     }
 }
 
-// Main Interactive Driver Application
+// =============================================================================
+// Main Driver Application, UI Loop & Input Validation
+// =============================================================================
 public class LangkawiGraphSystem {
     private static final Scanner sc = new Scanner(System.in);
     private static final ScenicGraph graph = new ScenicGraph();
