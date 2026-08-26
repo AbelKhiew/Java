@@ -204,7 +204,7 @@ class ScenicGraph {
         Queue<String> queue = new LinkedList<>();
         List<String> order = new ArrayList<>();
 
-        visited.add(canonical.toLowerCase());
+        visited.add(canonical);
         queue.add(canonical);
 
         System.out.println("\n--- BREADTH-FIRST SEARCH (BFS) TRAVERSAL ---");
@@ -218,8 +218,8 @@ class ScenicGraph {
 
             for (Edge edge : adjacencyList.get(current)) {
                 String neighbor = edge.getDestination();
-                if (!visited.contains(neighbor.toLowerCase())) {
-                    visited.add(neighbor.toLowerCase());
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
                     queue.add(neighbor);
                     System.out.println("   --> Queued neighbor: " + neighbor);
                 }
@@ -234,103 +234,175 @@ class ScenicGraph {
             }
         }
         System.out.println("\n");
+        System.out.println("Time Complexity: O(V + E)  where V = " + adjacencyList.size()
+                + " scenic spots visited, E = routes traversed.");
     }
 }
 
 // =============================================================================
 // Main Driver Application, UI Loop & Input Validation
 // =============================================================================
-public class LangkawiGraphSystem {
+public class ASGM {
     private static final Scanner sc = new Scanner(System.in);
     private static final ScenicGraph graph = new ScenicGraph();
 
     public static void main(String[] args) {
         while (true) {
-            printMenu();
-            int choice = readInt("Select an option (1-9): ", 1, 9);
+            printMainMenu();
+            int choice = readInt("Select an option (0-5): ", 0, 5);
 
             switch (choice) {
                 case 1:
                     graph.createDefaultNetwork();
                     break;
                 case 2:
-                    System.out.print("Enter new spot name: ");
-                    graph.addScenicSpot(sc.nextLine(), true);
+                    manageGraphMenu();
                     break;
                 case 3:
-                    printAvailableSpots();
-                    System.out.print("Enter spot name to remove: ");
-                    graph.removeScenicSpot(sc.nextLine());
+                    if (requireNonEmptyGraph()) {
+                        printAvailableSpots();
+                        System.out.print("Enter spot name to search: ");
+                        graph.searchScenicSpot(sc.nextLine());
+                    }
                     break;
                 case 4:
-                    printAvailableSpots();
-                    System.out.print("Enter 1st spot: ");
-                    String a = sc.nextLine();
-                    System.out.print("Enter 2nd spot: ");
-                    String b = sc.nextLine();
-                    System.out.println("Route Types: 1. Cable Car Route | 2. Walking Path | 3. Hiking Trail");
-                    int typeChoice = readInt("Select Route Type (1-3): ", 1, 3);
-                    String type;
-                    switch (typeChoice) {
-                        case 1:
-                            type = "Cable Car Route";
-                            break;
-                        case 2:
-                            type = "Walking Path";
-                            break;
-                        default:
-                            type = "Hiking Trail";
-                            break;
-                    }
-                    graph.addRoute(a, b, type, true);
-                    break;
-                case 5:
-                    printAvailableSpots();
-                    System.out.print("Enter 1st spot: ");
-                    String spotA = sc.nextLine();
-                    System.out.print("Enter 2nd spot: ");
-                    String spotB = sc.nextLine();
-                    graph.removeRoute(spotA, spotB);
-                    break;
-                case 6:
-                    printAvailableSpots();
-                    System.out.print("Enter spot name to search: ");
-                    graph.searchScenicSpot(sc.nextLine());
-                    break;
-                case 7:
                     graph.displayNetwork();
                     break;
-                case 8:
-                    printAvailableSpots();
-                    System.out.print("Enter start spot for BFS: ");
-                    graph.breadthFirstSearch(sc.nextLine());
+                case 5:
+                    if (requireNonEmptyGraph()) {
+                        printAvailableSpots();
+                        System.out.print("Enter start spot for BFS: ");
+                        graph.breadthFirstSearch(sc.nextLine());
+                    }
                     break;
-                case 9:
+                case 0:
                     System.out.println("Exiting System. Goodbye!");
                     return;
             }
         }
     }
 
-    private static void printMenu() {
+    // -------------------------------------------------------------------------
+    // Level 2: Manage Graph (Vertex & Edge operations)
+    // -------------------------------------------------------------------------
+    private static void manageGraphMenu() {
+        while (true) {
+            printManageMenu();
+            int choice = readInt("Select an option (0-4): ", 0, 4);
+
+            switch (choice) {
+                case 1:
+                    do {
+                        System.out.print("Enter the name of the scenic spot: ");
+                        graph.addScenicSpot(sc.nextLine(), true);
+                    } while (askContinue());
+                    break;
+                case 2:
+                    if (requireNonEmptyGraph()) {
+                        do {
+                            printAvailableSpots();
+                            System.out.print("Enter spot name to remove: ");
+                            graph.removeScenicSpot(sc.nextLine());
+                        } while (!graph.isEmpty() && askContinue());
+                    }
+                    break;
+                case 3:
+                    if (requireNonEmptyGraph()) {
+                        do {
+                            addRouteFlow();
+                        } while (askContinue());
+                    }
+                    break;
+                case 4:
+                    if (requireNonEmptyGraph()) {
+                        do {
+                            printAvailableSpots();
+                            System.out.print("Enter 1st spot: ");
+                            String spotA = sc.nextLine();
+                            System.out.print("Enter 2nd spot: ");
+                            String spotB = sc.nextLine();
+                            graph.removeRoute(spotA, spotB);
+                        } while (askContinue());
+                    }
+                    break;
+                case 0:
+                    return;
+            }
+        }
+    }
+
+    private static void addRouteFlow() {
+        printAvailableSpots();
+        System.out.print("Enter the 1st scenic spot: ");
+        String a = sc.nextLine();
+        System.out.print("Enter the 2nd scenic spot: ");
+        String b = sc.nextLine();
+
+        if (graph.getCanonicalName(a) == null || graph.getCanonicalName(b) == null) {
+            System.out.println("[ERROR] One or both scenic spots do not exist.");
+            return;
+        }
+
+        System.out.println("Route Types: 1. Cable Car Route | 2. Walking Path | 3. Hiking Trail");
+        int typeChoice = readInt("Select Route Type (1-3): ", 1, 3);
+        String type;
+        switch (typeChoice) {
+            case 1: type = "Cable Car Route"; break;
+            case 2: type = "Walking Path"; break;
+            default: type = "Hiking Trail"; break;
+        }
+        graph.addRoute(a, b, type, true);
+    }
+
+    // -------------------------------------------------------------------------
+    // Shared UI helpers
+    // -------------------------------------------------------------------------
+    private static void printMainMenu() {
         System.out.println("\n=======================================================");
         System.out.println("    LANGKAWI SKYCAB & HIKING TRAIL NETWORK SYSTEM");
         System.out.println("=======================================================");
         System.out.println(" 1. Create/Reset Graph (Default 10 Spots, 11 Routes)");
-        System.out.println(" 2. Add Scenic Spot");
-        System.out.println(" 3. Remove Scenic Spot");
-        System.out.println(" 4. Add Route");
-        System.out.println(" 5. Remove Route");
-        System.out.println(" 6. Search Scenic Spot");
-        System.out.println(" 7. Display Network (Adjacency List)");
-        System.out.println(" 8. Breadth-First Search (BFS)");
-        System.out.println(" 9. Exit");
+        System.out.println(" 2. Manage Graph (Add/Remove Spot or Route)");
+        System.out.println(" 3. Search Scenic Spot");
+        System.out.println(" 4. Display Network (Adjacency List)");
+        System.out.println(" 5. Breadth-First Search (BFS)");
+        System.out.println(" 0. Exit");
         System.out.println("=======================================================");
+    }
+
+    private static void printManageMenu() {
+        System.out.println("\n-------------------------------------------------------");
+        System.out.println("  MANAGE GRAPH (Press '0' to return to Main Menu)");
+        System.out.println("-------------------------------------------------------");
+        System.out.println(" 1. Add a Scenic Spot (Vertex)");
+        System.out.println(" 2. Remove a Scenic Spot (Vertex)");
+        System.out.println(" 3. Add a Route (Edge)");
+        System.out.println(" 4. Remove a Route (Edge)");
+        System.out.println(" 0. Return to Main Menu");
+        System.out.println("-------------------------------------------------------");
     }
 
     private static void printAvailableSpots() {
         if (graph.isEmpty()) return;
         System.out.println("\nCurrent Network Spots: " + graph.getSpotNames());
+    }
+
+    private static boolean requireNonEmptyGraph() {
+        if (graph.isEmpty()) {
+            System.out.println("\n[INFO] Graph is currently empty. Please add a scenic spot first.");
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean askContinue() {
+        while (true) {
+            System.out.print("Continue? (Y/N): ");
+            String ans = sc.nextLine().trim();
+            if (ans.equalsIgnoreCase("Y")) return true;
+            if (ans.equalsIgnoreCase("N")) return false;
+            System.out.println("[ERROR] Please enter Y or N.");
+        }
     }
 
     private static int readInt(String prompt, int min, int max) {
