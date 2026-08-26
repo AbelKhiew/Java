@@ -46,7 +46,20 @@ class ScenicGraph {
         addRoute("Seven Wells Waterfall", "Viewing Platform", "Hiking Trail", false);
         addRoute("Viewing Platform", "Sky Bistro", "Walking Path", false);
 
-        System.out.println("\n[SUCCESS] Default network created (10 spots, 11 routes).");
+        int vertexCount = adjacencyList.size();
+        int edgeCount = 0;
+        for (List<Edge> edges : adjacencyList.values()) {
+            edgeCount += edges.size();
+        }
+        edgeCount /= 2;
+
+        System.out.println("\n========================================");
+        System.out.println("       GRAPH CREATED SUCCESSFULLY");
+        System.out.println("========================================");
+        System.out.println("Vertices : " + vertexCount);
+        System.out.println("Edges    : " + edgeCount);
+        System.out.println("Graph    : Undirected Graph");
+        System.out.println("Storage  : Adjacency List");
     }
 
     public String getCanonicalName(String name) {
@@ -232,11 +245,9 @@ public class LangkawiGraphSystem {
     private static final ScenicGraph graph = new ScenicGraph();
 
     public static void main(String[] args) {
-        graph.createDefaultNetwork();
-
         while (true) {
             printMenu();
-            int choice = readInt("Select an option (0-8): ", 0, 8);
+            int choice = readInt("Select an option (1-9): ", 1, 9);
 
             switch (choice) {
                 case 1:
@@ -294,7 +305,7 @@ public class LangkawiGraphSystem {
                     System.out.print("Enter start spot for BFS: ");
                     graph.breadthFirstSearch(sc.nextLine());
                     break;
-                case 0:
+                case 9:
                     System.out.println("Exiting System. Goodbye!");
                     return;
             }
@@ -313,7 +324,7 @@ public class LangkawiGraphSystem {
         System.out.println(" 6. Search Scenic Spot");
         System.out.println(" 7. Display Network (Adjacency List)");
         System.out.println(" 8. Breadth-First Search (BFS)");
-        System.out.println(" 0. Exit");
+        System.out.println(" 9. Exit");
         System.out.println("=======================================================");
     }
 
