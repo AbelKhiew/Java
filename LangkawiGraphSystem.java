@@ -242,7 +242,7 @@ class ScenicGraph {
 // =============================================================================
 // Main Driver Application, UI Loop & Input Validation
 // =============================================================================
-public class ASGM {
+public class LangkawiGraphSystem {
     private static final Scanner sc = new Scanner(System.in);
     private static final ScenicGraph graph = new ScenicGraph();
 
