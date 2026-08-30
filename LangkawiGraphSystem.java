@@ -1,4 +1,4 @@
-package asgm;
+package langkawigraphsystem;
 
 import java.util.*;
 
@@ -90,12 +90,9 @@ class ScenicGraph {
         return adjacencyList.keySet();
     }
 
-    /**
-     * Returns every route exactly once as {spotA, spotB, routeType}, instead
-     * of twice (once from each side) the way the internal adjacency list
-     * stores an undirected edge. Used by the GUI (ScenicMapApp) so it can
-     * draw the same graph the console app currently holds.
-     */
+     // -------------------------------------------------------------------------
+     //Returns every route exactly once as {spotA, spotB, routeType}
+     // -------------------------------------------------------------------------
     public List<String[]> getRoutesOnce() {
         List<String[]> result = new ArrayList<>();
         Set<String> seen = new HashSet<>();
