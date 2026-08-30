@@ -1,9 +1,12 @@
+package asgm;
+
 import java.util.*;
 
 // =============================================================================
 // DATA STRUCTURE ARCHITECTURE & EDGE MODEL
 // =============================================================================
 class Edge {
+
     private String destination;
     private String routeType;
 
@@ -12,8 +15,13 @@ class Edge {
         this.routeType = routeType;
     }
 
-    public String getDestination() { return destination; }
-    public String getRouteType() { return routeType; }
+    public String getDestination() {
+        return destination;
+    }
+
+    public String getRouteType() {
+        return routeType;
+    }
 }
 
 class ScenicGraph {
@@ -63,30 +71,67 @@ class ScenicGraph {
     }
 
     public String getCanonicalName(String name) {
-        if (name == null) return null;
+        if (name == null) {
+            return null;
+        }
         for (String key : adjacencyList.keySet()) {
-            if (key.equalsIgnoreCase(name.trim())) return key;
+            if (key.equalsIgnoreCase(name.trim())) {
+                return key;
+            }
         }
         return null;
     }
 
-    public boolean isEmpty() { return adjacencyList.isEmpty(); }
-    public Set<String> getSpotNames() { return adjacencyList.keySet(); }
+    public boolean isEmpty() {
+        return adjacencyList.isEmpty();
+    }
+
+    public Set<String> getSpotNames() {
+        return adjacencyList.keySet();
+    }
+
+    /**
+     * Returns every route exactly once as {spotA, spotB, routeType}, instead
+     * of twice (once from each side) the way the internal adjacency list
+     * stores an undirected edge. Used by the GUI (ScenicMapApp) so it can
+     * draw the same graph the console app currently holds.
+     */
+    public List<String[]> getRoutesOnce() {
+        List<String[]> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Map.Entry<String, List<Edge>> entry : adjacencyList.entrySet()) {
+            String from = entry.getKey();
+            for (Edge e : entry.getValue()) {
+                String to = e.getDestination();
+                String key = from.compareToIgnoreCase(to) < 0 ? from + "|" + to : to + "|" + from;
+                if (seen.add(key)) {
+                    result.add(new String[]{from, to, e.getRouteType()});
+                }
+            }
+        }
+        return result;
+    }
 
     // -------------------------------------------------------------------------
     // Dynamic Graph Mutations (Vertices & Edges)
     // -------------------------------------------------------------------------
     public boolean addScenicSpot(String spotName, boolean printMsg) {
         if (spotName == null || spotName.trim().isEmpty()) {
-            if (printMsg) System.out.println("[ERROR] Spot name cannot be empty.");
+            if (printMsg) {
+                System.out.println("[ERROR] Spot name cannot be empty.");
+            }
             return false;
         }
         if (getCanonicalName(spotName) != null) {
-            if (printMsg) System.out.println("[ERROR] Spot already exists.");
+            if (printMsg) {
+                System.out.println("[ERROR] Spot already exists.");
+            }
             return false;
         }
         adjacencyList.put(spotName.trim(), new ArrayList<>());
-        if (printMsg) System.out.println("[SUCCESS] Added spot: " + spotName.trim());
+        if (printMsg) {
+            System.out.println("[SUCCESS] Added spot: " + spotName.trim());
+        }
         return true;
     }
 
@@ -109,23 +154,31 @@ class ScenicGraph {
         String canonicalB = getCanonicalName(locB);
 
         if (canonicalA == null || canonicalB == null) {
-            if (printMsg) System.out.println("[ERROR] One or both scenic spots do not exist.");
+            if (printMsg) {
+                System.out.println("[ERROR] One or both scenic spots do not exist.");
+            }
             return false;
         }
         if (canonicalA.equalsIgnoreCase(canonicalB)) {
-            if (printMsg) System.out.println("[ERROR] Cannot connect a spot to itself.");
+            if (printMsg) {
+                System.out.println("[ERROR] Cannot connect a spot to itself.");
+            }
             return false;
         }
         for (Edge e : adjacencyList.get(canonicalA)) {
             if (e.getDestination().equalsIgnoreCase(canonicalB)) {
-                if (printMsg) System.out.println("[ERROR] Route already exists between these spots.");
+                if (printMsg) {
+                    System.out.println("[ERROR] Route already exists between these spots.");
+                }
                 return false;
             }
         }
 
         adjacencyList.get(canonicalA).add(new Edge(canonicalB, type));
         adjacencyList.get(canonicalB).add(new Edge(canonicalA, type));
-        if (printMsg) System.out.println("[SUCCESS] Route added between " + canonicalA + " and " + canonicalB);
+        if (printMsg) {
+            System.out.println("[SUCCESS] Route added between " + canonicalA + " and " + canonicalB);
+        }
         return true;
     }
 
@@ -243,13 +296,14 @@ class ScenicGraph {
 // Main Driver Application, UI Loop & Input Validation
 // =============================================================================
 public class LangkawiGraphSystem {
+
     private static final Scanner sc = new Scanner(System.in);
     private static final ScenicGraph graph = new ScenicGraph();
 
     public static void main(String[] args) {
         while (true) {
             printMainMenu();
-            int choice = readInt("Select an option (0-5): ", 0, 5);
+            int choice = readInt("Select an option (0-6): ", 0, 6);
 
             switch (choice) {
                 case 1:
@@ -275,9 +329,13 @@ public class LangkawiGraphSystem {
                         graph.breadthFirstSearch(sc.nextLine());
                     }
                     break;
+                case 6:
+                    System.out.println("\n[INFO] Opening graph window... (a separate window will pop up)");
+                    ScenicMapApp.open(graph);
+                    break;
                 case 0:
                     System.out.println("Exiting System. Goodbye!");
-                    return;
+                    System.exit(0);
             }
         }
     }
@@ -347,9 +405,15 @@ public class LangkawiGraphSystem {
         int typeChoice = readInt("Select Route Type (1-3): ", 1, 3);
         String type;
         switch (typeChoice) {
-            case 1: type = "Cable Car Route"; break;
-            case 2: type = "Walking Path"; break;
-            default: type = "Hiking Trail"; break;
+            case 1:
+                type = "Cable Car Route";
+                break;
+            case 2:
+                type = "Walking Path";
+                break;
+            default:
+                type = "Hiking Trail";
+                break;
         }
         graph.addRoute(a, b, type, true);
     }
@@ -366,6 +430,7 @@ public class LangkawiGraphSystem {
         System.out.println(" 3. Search Scenic Spot");
         System.out.println(" 4. Display Network (Adjacency List)");
         System.out.println(" 5. Breadth-First Search (BFS)");
+        System.out.println(" 6. Display Graph (GUI Window)");
         System.out.println(" 0. Exit");
         System.out.println("=======================================================");
     }
@@ -383,7 +448,9 @@ public class LangkawiGraphSystem {
     }
 
     private static void printAvailableSpots() {
-        if (graph.isEmpty()) return;
+        if (graph.isEmpty()) {
+            return;
+        }
         System.out.println("\nCurrent Network Spots: " + graph.getSpotNames());
     }
 
@@ -399,8 +466,12 @@ public class LangkawiGraphSystem {
         while (true) {
             System.out.print("Continue? (Y/N): ");
             String ans = sc.nextLine().trim();
-            if (ans.equalsIgnoreCase("Y")) return true;
-            if (ans.equalsIgnoreCase("N")) return false;
+            if (ans.equalsIgnoreCase("Y")) {
+                return true;
+            }
+            if (ans.equalsIgnoreCase("N")) {
+                return false;
+            }
             System.out.println("[ERROR] Please enter Y or N.");
         }
     }
@@ -410,8 +481,11 @@ public class LangkawiGraphSystem {
             System.out.print(prompt);
             try {
                 int val = Integer.parseInt(sc.nextLine().trim());
-                if (val >= min && val <= max) return val;
-            } catch (NumberFormatException ignored) {}
+                if (val >= min && val <= max) {
+                    return val;
+                }
+            } catch (NumberFormatException ignored) {
+            }
             System.out.printf("[ERROR] Please enter a valid number between %d and %d.\n", min, max);
         }
     }
