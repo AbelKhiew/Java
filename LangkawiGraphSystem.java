@@ -2,9 +2,6 @@ package langkawigraphsystem;
 
 import java.util.*;
 
-// =============================================================================
-// DATA STRUCTURE ARCHITECTURE & EDGE MODEL
-// =============================================================================
 class Edge {
 
     private String destination;
@@ -26,9 +23,6 @@ class Edge {
 
 class ScenicGraph {
 
-    // -------------------------------------------------------------------------
-    // Adjacency List Storage & Default Network Setup
-    // -------------------------------------------------------------------------
     private Map<String, List<Edge>> adjacencyList = new LinkedHashMap<>();
 
     public void createDefaultNetwork() {
@@ -70,6 +64,9 @@ class ScenicGraph {
         System.out.println("Storage  : Adjacency List");
     }
 
+    // -------------------------------------------------------------------------
+    // finds the stored spot name that matches input, ignoring case
+    // -------------------------------------------------------------------------
     public String getCanonicalName(String name) {
         if (name == null) {
             return null;
@@ -85,14 +82,14 @@ class ScenicGraph {
     public boolean isEmpty() {
         return adjacencyList.isEmpty();
     }
-
+    
     public Set<String> getSpotNames() {
         return adjacencyList.keySet();
     }
 
-     // -------------------------------------------------------------------------
-     //Returns every route exactly once as {spotA, spotB, routeType}
-     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // returns each route once instead of twice, so the GUI can draw it
+    // -------------------------------------------------------------------------
     public List<String[]> getRoutesOnce() {
         List<String[]> result = new ArrayList<>();
         Set<String> seen = new HashSet<>();
@@ -222,6 +219,7 @@ class ScenicGraph {
         System.out.println();
     }
 
+
     public void displayNetwork() {
         if (adjacencyList.isEmpty()) {
             System.out.println("\n[INFO] Graph is currently empty.");
@@ -243,6 +241,9 @@ class ScenicGraph {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // runs BFS from a starting spot and prints each step
+    // -------------------------------------------------------------------------
     public void breadthFirstSearch(String startSpot) {
         String canonical = getCanonicalName(startSpot);
         if (canonical == null) {
@@ -415,9 +416,6 @@ public class LangkawiGraphSystem {
         graph.addRoute(a, b, type, true);
     }
 
-    // -------------------------------------------------------------------------
-    // Shared UI helpers
-    // -------------------------------------------------------------------------
     private static void printMainMenu() {
         System.out.println("\n=======================================================");
         System.out.println("    LANGKAWI SKYCAB & HIKING TRAIL NETWORK SYSTEM");
@@ -451,6 +449,9 @@ public class LangkawiGraphSystem {
         System.out.println("\nCurrent Network Spots: " + graph.getSpotNames());
     }
 
+    // -------------------------------------------------------------------------
+    // checks the graph is not empty before continuing
+    // -------------------------------------------------------------------------
     private static boolean requireNonEmptyGraph() {
         if (graph.isEmpty()) {
             System.out.println("\n[INFO] Graph is currently empty. Please add a scenic spot first.");
