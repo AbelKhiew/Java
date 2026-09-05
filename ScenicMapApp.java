@@ -7,6 +7,10 @@ import java.util.Map;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -19,6 +23,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class ScenicMapApp extends Application {
 
@@ -27,30 +32,64 @@ public class ScenicMapApp extends Application {
     private static final int CENTER_X = CANVAS_WIDTH / 2;
     private static final int CENTER_Y = CANVAS_HEIGHT / 2;
     private static final int RADIUS = 170;
-    private static boolean fxStarted = false;
+    private static final Object FX_LOCK = new Object();
+    private static final List<ScenicGraph> pendingGraphs = new ArrayList<>();
+    private static boolean fxLaunching = false;
+    private static boolean fxReady = false;
 
     // -------------------------------------------------------------------------
     // builds a default network and shows it when run standalone
     // -------------------------------------------------------------------------
     @Override
     public void start(Stage primaryStage) {
-        ScenicGraph defaultGraph = new ScenicGraph();
-        defaultGraph.createDefaultNetwork();
-        buildAndShow(primaryStage, defaultGraph);
+        List<ScenicGraph> graphsToShow;
+        synchronized (FX_LOCK) {
+            fxReady = true;
+            graphsToShow = new ArrayList<>(pendingGraphs);
+            pendingGraphs.clear();
+        }
+
+        if (graphsToShow.isEmpty()) {
+            ScenicGraph defaultGraph = new ScenicGraph();
+            defaultGraph.createDefaultNetwork();
+            buildAndShow(primaryStage, defaultGraph);
+            return;
+        }
+
+        buildAndShow(primaryStage, graphsToShow.get(0));
+        for (int i = 1; i < graphsToShow.size(); i++) {
+            buildAndShow(new Stage(), graphsToShow.get(i));
+        }
     }
 
     // -------------------------------------------------------------------------
     // opens the graph window from the console app, safe to call again
     // -------------------------------------------------------------------------
     public static void open(ScenicGraph graph) {
-        if (!fxStarted) {
-            fxStarted = true;
-            Platform.startup(() -> {
-                Platform.setImplicitExit(false);
-                new ScenicMapApp().buildAndShow(new Stage(), graph);
-            });
-        } else {
-            Platform.runLater(() -> new ScenicMapApp().buildAndShow(new Stage(), graph));
+        synchronized (FX_LOCK) {
+            pendingGraphs.add(graph);
+            if (fxReady) {
+                Platform.runLater(ScenicMapApp::showPendingGraphs);
+                return;
+            }
+
+            if (!fxLaunching) {
+                fxLaunching = true;
+                new JFXPanel();
+                fxReady = true;
+            }
+            Platform.runLater(ScenicMapApp::showPendingGraphs);
+        }
+    }
+
+    private static void showPendingGraphs() {
+        List<ScenicGraph> graphsToShow;
+        synchronized (FX_LOCK) {
+            graphsToShow = new ArrayList<>(pendingGraphs);
+            pendingGraphs.clear();
+        }
+        for (ScenicGraph graph : graphsToShow) {
+            new ScenicMapApp().buildAndShow(new Stage(), graph);
         }
     }
 
@@ -71,6 +110,12 @@ public class ScenicMapApp extends Application {
         root.setTop(header);
 
         redraw(root, graph); // initial draw
+
+        Timeline liveRefresh = new Timeline(new KeyFrame(Duration.millis(500),
+            event -> redraw(root, graph)));
+        liveRefresh.setCycleCount(Animation.INDEFINITE);
+        liveRefresh.play();
+        primaryStage.setOnHidden(event -> liveRefresh.stop());
 
         primaryStage.setTitle("Scenic Cable Car and Hiking Trail Network");
         primaryStage.setScene(new Scene(root, CANVAS_WIDTH + 20, CANVAS_HEIGHT + 90));

@@ -25,7 +25,7 @@ class ScenicGraph {
 
     private Map<String, List<Edge>> adjacencyList = new LinkedHashMap<>();
 
-    public void createDefaultNetwork() {
+    public synchronized void createDefaultNetwork() {
         adjacencyList.clear();
         String[] spots = {
             "Oriental Village", "Base Station", "Middle Station", "Top Station",
@@ -79,18 +79,18 @@ class ScenicGraph {
         return null;
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return adjacencyList.isEmpty();
     }
     
-    public Set<String> getSpotNames() {
-        return adjacencyList.keySet();
+    public synchronized Set<String> getSpotNames() {
+        return new LinkedHashSet<>(adjacencyList.keySet());
     }
 
     // -------------------------------------------------------------------------
     // returns each route once instead of twice, so the GUI can draw it
     // -------------------------------------------------------------------------
-    public List<String[]> getRoutesOnce() {
+    public synchronized List<String[]> getRoutesOnce() {
         List<String[]> result = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         for (Map.Entry<String, List<Edge>> entry : adjacencyList.entrySet()) {
@@ -109,7 +109,7 @@ class ScenicGraph {
     // -------------------------------------------------------------------------
     // Dynamic Graph Mutations (Vertices & Edges)
     // -------------------------------------------------------------------------
-    public boolean addScenicSpot(String spotName, boolean printMsg) {
+    public synchronized boolean addScenicSpot(String spotName, boolean printMsg) {
         if (spotName == null || spotName.trim().isEmpty()) {
             if (printMsg) {
                 System.out.println("[ERROR] Spot name cannot be empty.");
@@ -129,7 +129,7 @@ class ScenicGraph {
         return true;
     }
 
-    public boolean removeScenicSpot(String spotName) {
+    public synchronized boolean removeScenicSpot(String spotName) {
         String canonical = getCanonicalName(spotName);
         if (canonical == null) {
             System.out.println("[ERROR] Scenic spot not found.");
@@ -143,7 +143,7 @@ class ScenicGraph {
         return true;
     }
 
-    public boolean addRoute(String locA, String locB, String type, boolean printMsg) {
+    public synchronized boolean addRoute(String locA, String locB, String type, boolean printMsg) {
         String canonicalA = getCanonicalName(locA);
         String canonicalB = getCanonicalName(locB);
 
@@ -176,7 +176,7 @@ class ScenicGraph {
         return true;
     }
 
-    public boolean removeRoute(String locA, String locB) {
+    public synchronized boolean removeRoute(String locA, String locB) {
         String canonicalA = getCanonicalName(locA);
         String canonicalB = getCanonicalName(locB);
 
